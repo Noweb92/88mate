@@ -7,7 +7,7 @@ import {
   type WorkPeriodInput,
 } from "@/app/jobs/actions";
 import { computeDaysCounted, WORK_TYPE_LABELS, type WorkType } from "@/lib/days";
-import { INDUSTRIES } from "@/lib/industries";
+import { INDUSTRIES, industryLabel } from "@/lib/industries";
 import { toISODate, type VisaType } from "@/lib/visa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
 type PostcodeState =
   | { status: "idle" }
   | { status: "checking" }
-  | { status: "eligible" }
+  | { status: "eligible"; industries: string[] }
   | { status: "not_eligible" }
   | { status: "unknown" };
 
@@ -54,10 +54,9 @@ export function NewJobForm({ visaType }: { visaType: VisaType }) {
       .then((json) => {
         if (cancelled) return;
         if (!json.ok) setPcState({ status: "unknown" });
-        else
-          setPcState({
-            status: json.eligible ? "eligible" : "not_eligible",
-          });
+        else if (json.eligible)
+          setPcState({ status: "eligible", industries: json.industries ?? [] });
+        else setPcState({ status: "not_eligible" });
       })
       .catch(() => !cancelled && setPcState({ status: "unknown" }));
     return () => {
@@ -67,6 +66,13 @@ export function NewJobForm({ visaType }: { visaType: VisaType }) {
 
   const isFullTime = workType === "full_time";
   const effectiveEnd = stillWorking && isFullTime ? null : endDate || null;
+
+  // Eligibility is industry-specific: a postcode can count for farm work
+  // but not for hospitality, depending on visa and area.
+  const industryEligible =
+    pcState.status === "eligible" && industry !== ""
+      ? pcState.industries.includes(industry)
+      : null;
 
   const previewDays =
     workType && startDate && (effectiveEnd || (isFullTime && stillWorking))
@@ -134,10 +140,18 @@ export function NewJobForm({ visaType }: { visaType: VisaType }) {
         {pcState.status === "checking" && (
           <p className="text-xs text-muted-foreground">Checking postcode…</p>
         )}
-        {pcState.status === "eligible" && (
+        {pcState.status === "eligible" && industryEligible !== false && (
           <p className="flex items-center gap-1.5 text-xs font-medium text-green-700">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Eligible area for visa{" "}
-            {visaType}
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {industryEligible
+              ? `Eligible for ${industryLabel(industry).toLowerCase()} here`
+              : `Eligible area for visa ${visaType}`}
+          </p>
+        )}
+        {pcState.status === "eligible" && industryEligible === false && (
+          <p className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+            <XCircle className="h-3.5 w-3.5" /> This area is eligible, but NOT
+            for {industryLabel(industry).toLowerCase()} on visa {visaType}
           </p>
         )}
         {pcState.status === "not_eligible" && (
@@ -250,10 +264,11 @@ export function NewJobForm({ visaType }: { visaType: VisaType }) {
         <div className="rounded-xl border bg-accent p-4 text-sm text-accent-foreground">
           This period adds{" "}
           <span className="font-bold">{previewDays} days</span> to your count
-          {pcState.status === "not_eligible" && (
+          {(pcState.status === "not_eligible" ||
+            industryEligible === false) && (
             <span className="font-medium text-destructive">
               {" "}
-              — but the postcode looks ineligible
+              — but this work looks ineligible here
             </span>
           )}
           .

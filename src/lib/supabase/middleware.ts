@@ -40,7 +40,10 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isPublic =
-    PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/auth");
+    PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith("/auth") ||
+    // Public postcode checker (PRD: lead magnet, works logged out)
+    pathname.startsWith("/api/check-postcode");
 
   if (!user && !isPublic) {
     const redirectUrl = request.nextUrl.clone();

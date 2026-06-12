@@ -9,15 +9,25 @@
 | Sprint | Contenu | Statut |
 |---|---|---|
 | **1** | Setup, Auth (email + Google), Onboarding 4 écrans, schéma DB complet + RLS | ✅ fait |
-| 2 | Tracker (moteur de calcul des jours), vérificateur postcode, seed officiel | ⏳ |
+| **2** | Tracker (moteur de calcul des jours), vérificateur postcode, **données officielles immi** | ✅ fait |
 | 3 | Coffre-fort + OCR Claude + dashboard complet | ⏳ |
 | 4 | Export PDF + Stripe + checklist → launch MVP | ⏳ |
+
+### Données postcodes officielles
+
+`supabase/seeds/eligible_postcodes.sql` est **généré** depuis les listes officielles
+(417 : `/work-holiday-417/specified-work` ; 462 : `/work-holiday-462/specified-462-work`),
+~4 700 postcodes par visa, industries par zone (regional / northern / remote / bushfire / disaster).
+Pour resynchroniser après une mise à jour officielle : mettre à jour les constantes dans
+`scripts/generate-eligible-postcodes.mjs` puis `node scripts/generate-eligible-postcodes.mjs`
+et rejouer le SQL. L'éligibilité est vérifiée **par industrie** (ex. mining = 417 uniquement).
 
 ## Setup local
 
 1. **Supabase** — crée un projet sur [supabase.com](https://supabase.com), puis dans le SQL Editor exécute :
    - `supabase/migrations/00001_initial_schema.sql` (schéma + RLS + bucket storage)
-   - `supabase/seed.sql` (données de DEV uniquement — échantillon, pas la liste officielle)
+   - `supabase/seeds/eligible_postcodes.sql` (liste officielle des postcodes, générée)
+   - `supabase/seed.sql` (award rates indicatifs)
 
 2. **Google OAuth** — dans Supabase : Authentication → Providers → Google. Crée les credentials OAuth sur [console.cloud.google.com](https://console.cloud.google.com) avec le callback `https://<project-ref>.supabase.co/auth/v1/callback`.
 

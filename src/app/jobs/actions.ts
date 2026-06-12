@@ -55,12 +55,17 @@ export async function createWorkPeriod(input: WorkPeriodInput) {
     .single();
   const visaType = profile?.visa_type ?? "417";
 
+  // Eligible means: postcode is listed AND the selected industry is
+  // approved for that postcode under this visa subclass.
   const { data: pc } = await supabase
     .from("eligible_postcodes")
-    .select("postcode")
+    .select("industries")
     .eq("postcode", d.postcode)
     .eq("visa_type", visaType)
     .maybeSingle();
+  const postcodeEligible = Boolean(
+    pc && ((pc.industries as string[]) ?? []).includes(d.industry)
+  );
 
   // Find-or-create the employer (shared entity, matched on name+postcode).
   const { data: existing } = await supabase
@@ -101,7 +106,7 @@ export async function createWorkPeriod(input: WorkPeriodInput) {
     work_type: d.workType,
     industry: d.industry,
     postcode: d.postcode,
-    postcode_eligible: Boolean(pc),
+    postcode_eligible: postcodeEligible,
     days_counted: daysCounted,
   });
   if (error) {
