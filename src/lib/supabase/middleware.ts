@@ -44,6 +44,10 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/auth") ||
     // Public postcode checker (PRD: lead magnet, works logged out)
     pathname.startsWith("/api/check-postcode") ||
+    // Programmatic SEO pages + crawler endpoints
+    pathname.startsWith("/postcode") ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/robots.txt" ||
     // Stripe webhooks arrive unauthenticated (signature-verified instead)
     pathname.startsWith("/api/stripe");
 

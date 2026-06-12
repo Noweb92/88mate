@@ -137,7 +137,13 @@ export function PostcodeChecker() {
           <p className="mt-3 text-xs text-muted-foreground">
             {result.sourceUpdatedAt
               ? `Official list, last synced ${result.sourceUpdatedAt}.`
-              : "⚠️ Dev database — sample data only, not the official list yet."}
+              : "⚠️ Dev database — sample data only, not the official list yet."}{" "}
+            <a
+              href={`/postcode/${postcode}`}
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              Full guide for {postcode} →
+            </a>
           </p>
         </div>
       )}
