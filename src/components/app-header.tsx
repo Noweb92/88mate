@@ -5,9 +5,14 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/dashboard", label: "Dashboard", key: "dashboard" },
   { href: "/jobs", label: "My jobs", key: "jobs" },
+  { href: "/vault", label: "Vault", key: "vault" },
 ] as const;
 
-export function AppHeader({ active }: { active: "dashboard" | "jobs" }) {
+export function AppHeader({
+  active,
+}: {
+  active: "dashboard" | "jobs" | "vault";
+}) {
   return (
     <header className="mb-6 space-y-4">
       <div className="flex items-center justify-between">

@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   title: "Add a work period — 88Mate",
 };
 
-export default async function NewJobPage() {
+export default async function NewJobPage({
+  searchParams,
+}: {
+  searchParams: { employer?: string; start?: string; end?: string };
+}) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL) redirect("/");
 
   const supabase = createClient();
@@ -42,7 +46,14 @@ export default async function NewJobPage() {
           days for you.
         </p>
       </div>
-      <NewJobForm visaType={(profile.visa_type ?? "417") as VisaType} />
+      <NewJobForm
+        visaType={(profile.visa_type ?? "417") as VisaType}
+        prefill={{
+          employer: searchParams.employer,
+          start: searchParams.start,
+          end: searchParams.end,
+        }}
+      />
     </div>
   );
 }

@@ -27,13 +27,33 @@ type PostcodeState =
   | { status: "not_eligible" }
   | { status: "unknown" };
 
-export function NewJobForm({ visaType }: { visaType: VisaType }) {
-  const [employerName, setEmployerName] = useState("");
+export type JobPrefill = {
+  employer?: string;
+  start?: string;
+  end?: string;
+};
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function NewJobForm({
+  visaType,
+  prefill,
+}: {
+  visaType: VisaType;
+  prefill?: JobPrefill;
+}) {
+  const [employerName, setEmployerName] = useState(
+    prefill?.employer?.slice(0, 120) ?? ""
+  );
   const [postcode, setPostcode] = useState("");
   const [industry, setIndustry] = useState("");
   const [workType, setWorkType] = useState<WorkType | "">("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(
+    prefill?.start && ISO_DATE.test(prefill.start) ? prefill.start : ""
+  );
+  const [endDate, setEndDate] = useState(
+    prefill?.end && ISO_DATE.test(prefill.end) ? prefill.end : ""
+  );
   const [stillWorking, setStillWorking] = useState(false);
   const [actualDays, setActualDays] = useState("");
   const [pcState, setPcState] = useState<PostcodeState>({ status: "idle" });
