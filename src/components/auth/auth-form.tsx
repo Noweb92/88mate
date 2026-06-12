@@ -31,6 +31,9 @@ function GoogleIcon() {
   );
 }
 
+// Inlined at build time — false only on a fresh clone without .env.local.
+const SUPABASE_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
+
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -41,12 +44,16 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
   async function handleGoogle() {
     setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
-    });
-    if (error) setError(error.message);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${location.origin}/auth/callback` },
+      });
+      if (error) setError(error.message);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,39 +61,61 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     setLoading(true);
     setError(null);
     setMessage(null);
-    const supabase = createClient();
 
-    if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${location.origin}/auth/callback` },
-      });
-      if (error) setError(error.message);
-      else setMessage("Almost there — check your inbox to confirm your email.");
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setError(error.message);
+    try {
+      const supabase = createClient();
+
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${location.origin}/auth/callback` },
+        });
+        if (error) {
+          setError(error.message);
+        } else if (data.session) {
+          // Email confirmation disabled (e.g. local dev): logged in already.
+          router.push("/dashboard");
+          router.refresh();
+          return;
+        } else {
+          setMessage(
+            "Almost there — check your inbox to confirm your email."
+          );
+        }
       } else {
-        router.push("/dashboard");
-        router.refresh();
-        return;
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) {
+          setError(error.message);
+        } else {
+          router.push("/dashboard");
+          router.refresh();
+          return;
+        }
       }
+    } catch {
+      setError("Something went wrong. Please try again.");
     }
     setLoading(false);
   }
 
   return (
     <div className="space-y-5">
+      {!SUPABASE_CONFIGURED && (
+        <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          Backend not configured yet — auth is disabled. Add your Supabase
+          keys to <code className="font-mono">.env.local</code> and restart.
+        </p>
+      )}
       <Button
         type="button"
         variant="outline"
         className="w-full gap-2"
         onClick={handleGoogle}
+        disabled={!SUPABASE_CONFIGURED}
       >
         <GoogleIcon />
         Continue with Google
@@ -134,7 +163,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={loading || !SUPABASE_CONFIGURED}
+        >
           {loading
             ? "One sec…"
             : mode === "signup"

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Disclaimer } from "@/components/disclaimer";
+import { PostcodeChecker } from "@/components/postcode-checker";
 
 const FEATURES = [
   {
@@ -64,6 +65,20 @@ export default function LandingPage() {
             <p className="text-xs text-muted-foreground">
               No card needed. 2-minute setup.
             </p>
+          </div>
+        </section>
+
+        <section className="pb-14">
+          <div className="mx-auto max-w-md">
+            <h2 className="text-center text-xl font-bold tracking-tight">
+              Does that farm&apos;s postcode actually count?
+            </h2>
+            <p className="mt-1 text-center text-sm text-muted-foreground">
+              Check it in 5 seconds — before you sign up for 3 months.
+            </p>
+            <div className="mt-5">
+              <PostcodeChecker />
+            </div>
           </div>
         </section>
 
