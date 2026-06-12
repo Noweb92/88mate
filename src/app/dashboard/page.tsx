@@ -187,6 +187,9 @@ export default async function DashboardPage() {
         <Button asChild className="h-12 w-full">
           <Link href="/jobs/new">+ Add a work period</Link>
         </Button>
+        <Button asChild variant="outline" className="h-12 w-full">
+          <Link href="/export">Prepare my visa pack →</Link>
+        </Button>
       </main>
 
       <footer className="pt-8">

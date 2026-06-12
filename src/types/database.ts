@@ -16,5 +16,6 @@ export interface Profile {
   has_vehicle: boolean;
   plan: Plan;
   onboarding_completed: boolean;
+  export_unlocked: boolean;
   created_at: string;
 }

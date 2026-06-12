@@ -10,8 +10,16 @@
 |---|---|---|
 | **1** | Setup, Auth (email + Google), Onboarding 4 écrans, schéma DB complet + RLS | ✅ fait |
 | **2** | Tracker (moteur de calcul des jours), vérificateur postcode, **données officielles immi** | ✅ fait |
-| 3 | Coffre-fort + OCR Claude + dashboard complet | ⏳ |
-| 4 | Export PDF + Stripe + checklist → launch MVP | ⏳ |
+| **3** | Coffre-fort (upload caméra/PDF, bucket privé RLS) + OCR payslips via Claude | ✅ fait |
+| **4** | Checklist visa + export PDF (@react-pdf) + paywall Stripe 29 AUD → **MVP** | ✅ fait |
+| 5 | CV builder IA + alertes sous-paiement + emails Resend | ⏳ |
+| 6 | Reviews employeurs + job board + radar (si traction) | ⏳ |
+
+### Activer les intégrations
+
+- **OCR payslips** : `ANTHROPIC_API_KEY` dans `.env.local` ([console.anthropic.com](https://console.anthropic.com)). Modèle par défaut `claude-opus-4-8`, override via `ANTHROPIC_OCR_MODEL`.
+- **Paywall export** : `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` + `SUPABASE_SERVICE_ROLE_KEY`. Webhook à pointer sur `/api/stripe/webhook` (event `checkout.session.completed`). En dev : `stripe listen --forward-to localhost:3200/api/stripe/webhook`.
+- Migration `00002_export_unlocked.sql` à exécuter si la base date d'avant le Sprint 4.
 
 ### Données postcodes officielles
 

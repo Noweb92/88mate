@@ -43,7 +43,9 @@ export async function updateSession(request: NextRequest) {
     PUBLIC_PATHS.includes(pathname) ||
     pathname.startsWith("/auth") ||
     // Public postcode checker (PRD: lead magnet, works logged out)
-    pathname.startsWith("/api/check-postcode");
+    pathname.startsWith("/api/check-postcode") ||
+    // Stripe webhooks arrive unauthenticated (signature-verified instead)
+    pathname.startsWith("/api/stripe");
 
   if (!user && !isPublic) {
     const redirectUrl = request.nextUrl.clone();

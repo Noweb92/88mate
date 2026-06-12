@@ -3,15 +3,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/dashboard", label: "Dashboard", key: "dashboard" },
-  { href: "/jobs", label: "My jobs", key: "jobs" },
+  { href: "/dashboard", label: "Home", key: "dashboard" },
+  { href: "/jobs", label: "Jobs", key: "jobs" },
   { href: "/vault", label: "Vault", key: "vault" },
+  { href: "/export", label: "Visa pack", key: "export" },
 ] as const;
 
 export function AppHeader({
   active,
 }: {
-  active: "dashboard" | "jobs" | "vault";
+  active: "dashboard" | "jobs" | "vault" | "export";
 }) {
   return (
     <header className="mb-6 space-y-4">
