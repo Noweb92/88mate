@@ -50,6 +50,8 @@ export async function updateSession(request: NextRequest) {
     pathname === "/robots.txt" ||
     // Stripe webhooks arrive unauthenticated (signature-verified instead)
     pathname.startsWith("/api/stripe");
+  // /cv, /export, /api/cv, /api/export all require auth — handled by the
+  // default !user redirect below.
 
   if (!user && !isPublic) {
     const redirectUrl = request.nextUrl.clone();

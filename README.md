@@ -12,8 +12,11 @@
 | **2** | Tracker (moteur de calcul des jours), vérificateur postcode, **données officielles immi** | ✅ fait |
 | **3** | Coffre-fort (upload caméra/PDF, bucket privé RLS) + OCR payslips via Claude | ✅ fait |
 | **4** | Checklist visa + export PDF (@react-pdf) + paywall Stripe 29 AUD → **MVP** | ✅ fait |
-| 5 | CV builder IA + alertes sous-paiement + emails Resend | ⏳ |
+| **5** | CV builder IA (3 templates, cover letter, PDF) + alertes sous-paiement | ✅ fait |
+| 5b | Emails Resend (rappels deadline / payslips) | ⏳ |
 | 6 | Reviews employeurs + job board + radar (si traction) | ⏳ |
+
+**SEO** : pages programmatiques `/postcode/[code]` (~4 700) + sitemap.xml + robots.ts.
 
 ### Activer les intégrations
 

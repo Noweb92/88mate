@@ -6,13 +6,14 @@ const TABS = [
   { href: "/dashboard", label: "Home", key: "dashboard" },
   { href: "/jobs", label: "Jobs", key: "jobs" },
   { href: "/vault", label: "Vault", key: "vault" },
-  { href: "/export", label: "Visa pack", key: "export" },
+  { href: "/export", label: "Pack", key: "export" },
+  { href: "/cv", label: "CV", key: "cv" },
 ] as const;
 
 export function AppHeader({
   active,
 }: {
-  active: "dashboard" | "jobs" | "vault" | "export";
+  active: "dashboard" | "jobs" | "vault" | "export" | "cv";
 }) {
   return (
     <header className="mb-6 space-y-4">
