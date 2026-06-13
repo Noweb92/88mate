@@ -22,6 +22,8 @@ const inputSchema = z.object({
   preAustraliaExperience: z.string().max(3000).optional().default(""),
   languages: z.string().max(500).optional().default(""),
   certifications: z.array(z.enum(AUSTRALIAN_CERTS)).default([]),
+  // Free-text tickets the checklist doesn't cover (Dogging, Rigging, …).
+  otherCertifications: z.string().max(300).optional().default(""),
   availability: z.string().max(300).optional().default(""),
   targetJobAd: z.string().max(6000).optional().default(""),
   includeCoverLetter: z.boolean().default(false),
@@ -97,6 +99,12 @@ export async function createResume(raw: CreateResumeInput) {
     workType: p.work_type,
   }));
 
+  const customCerts = input.otherCertifications
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+  const certifications = [...input.certifications, ...customCerts];
+
   const resumeInput: ResumeInput = {
     targetRole: input.targetRole,
     profile: {
@@ -113,7 +121,7 @@ export async function createResume(raw: CreateResumeInput) {
     workHistory,
     preAustraliaExperience: input.preAustraliaExperience,
     languages: input.languages,
-    certifications: input.certifications,
+    certifications,
     availability: input.availability,
     ...(targetJobAd ? { targetJobAd } : {}),
   };

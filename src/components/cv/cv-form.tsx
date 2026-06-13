@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 export function CvForm({ isPro }: { isPro: boolean }) {
   const [targetRole, setTargetRole] = useState("");
   const [certs, setCerts] = useState<string[]>([]);
+  const [otherCerts, setOtherCerts] = useState("");
   const [languages, setLanguages] = useState("");
   const [preExp, setPreExp] = useState("");
   const [availability, setAvailability] = useState("");
@@ -39,6 +40,7 @@ export function CvForm({ isPro }: { isPro: boolean }) {
       preAustraliaExperience: preExp,
       languages,
       certifications: certs as never,
+      otherCertifications: otherCerts,
       availability,
       targetJobAd: jobAd,
       includeCoverLetter: coverLetter,
@@ -96,6 +98,12 @@ export function CvForm({ isPro }: { isPro: boolean }) {
             </label>
           ))}
         </div>
+        <Input
+          value={otherCerts}
+          onChange={(e) => setOtherCerts(e.target.value)}
+          placeholder="Other tickets — e.g. Dogging, Rigging, HR Licence, EWP"
+          className="mt-1"
+        />
       </div>
 
       <div className="space-y-2">

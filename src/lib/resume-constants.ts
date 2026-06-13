@@ -10,6 +10,7 @@ export const ROLE_PRESETS = [
   "Farm / Regional work",
   "Hospitality",
   "Construction / Labour",
+  "Mining / FIFO",
   "Retail",
   "Warehouse",
   "Cleaning / Housekeeping",
@@ -20,6 +21,10 @@ export const ROLE_PRESETS = [
 
 export const AUSTRALIAN_CERTS = [
   "White Card",
+  "Standard 11 / General Mine Induction",
+  "Coal Board Medical",
+  "Working at Heights",
+  "Confined Space Entry",
   "RSA (Responsible Service of Alcohol)",
   "RSG (Responsible Service of Gambling)",
   "Forklift Licence",

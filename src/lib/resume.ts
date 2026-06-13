@@ -144,10 +144,18 @@ function buildProfileBlock(input: ResumeInput): string {
   );
 }
 
+function isMiningRole(role: string): boolean {
+  return /\b(mining|mine|fifo|resources|drill|dozer|quarry|coal)\b/i.test(role);
+}
+
 export async function generateResumeContent(
   input: ResumeInput
 ): Promise<ResumeContent> {
   const client = new Anthropic();
+
+  const miningNote = isMiningRole(input.targetRole)
+    ? `\nMINING / FIFO FOCUS: lead with safety and tickets — this sector screens on them first. Put the safety tickets and licences the candidate holds (e.g. White Card, Standard 11 / General Mine Induction, Coal Board Medical, Working at Heights, Confined Space) front and centre. Emphasise willingness to do FIFO and relocate, comfort with drug & alcohol testing, physical fitness, long swings/shift work, and a clean safety record. Do NOT claim any ticket the candidate did not provide — missing tickets are normal for entry roles.\n`
+    : "";
 
   const prompt = `Write an Australian-style resume for a Working Holiday Maker applying for: ${input.targetRole}.
 
@@ -163,6 +171,7 @@ AUSTRALIAN FORMAT (strict):
 - references_note is exactly "References available upon request".
 - certifications: list ONLY what the candidate actually provided — do not invent any.
 - Adapt all wording to "${input.targetRole}". Pull out the parts of their history most relevant to that role; for hands-on roles emphasise reliability, punctuality, physical work and any tickets/licences; for customer or office roles emphasise communication, accuracy and relevant tools.
+${miningNote}
 
 CONTENT FROM DATA ONLY:
 - Turn the Australian work history into experience entries with plain, specific bullets. Add concise entries from pre-Australia experience if given. Fill education ONLY from the data — empty array if none.
