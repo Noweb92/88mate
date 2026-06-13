@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { TEMPLATE_LABELS, type ResumeContent, type ResumeTemplate } from "@/lib/resume";
+import { type ResumeContent } from "@/lib/resume";
 import { AppHeader } from "@/components/app-header";
 import { Disclaimer } from "@/components/disclaimer";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export default async function ResumeDetailPage({
     .maybeSingle();
   if (!data) notFound();
 
-  const template = data.template as ResumeTemplate;
+  const template = data.template as string;
   const c = data.content as StoredContent;
 
   return (
@@ -53,9 +53,7 @@ export default async function ResumeDetailPage({
             {c.full_name}
           </h1>
           <p className="text-sm text-primary">{c.headline}</p>
-          <p className="text-xs text-muted-foreground">
-            {TEMPLATE_LABELS[template]}
-          </p>
+          <p className="text-xs text-muted-foreground">{template}</p>
         </div>
 
         <Button asChild className="h-12 w-full gap-2">
@@ -114,9 +112,27 @@ export default async function ResumeDetailPage({
             </div>
           )}
 
+          {c.education.length > 0 && (
+            <div>
+              <h2 className="font-semibold text-primary">Education</h2>
+              <div className="mt-1 space-y-1">
+                {c.education.map((e, i) => (
+                  <div key={i}>
+                    <p className="font-medium">{e.qualification}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {[e.institution, e.dates].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {c.certifications.length > 0 && (
             <div>
-              <h2 className="font-semibold text-primary">Certifications</h2>
+              <h2 className="font-semibold text-primary">
+                Certifications &amp; Licences
+              </h2>
               <ul className="mt-1 list-disc pl-4 text-muted-foreground">
                 {c.certifications.map((cert, i) => (
                   <li key={i}>{cert}</li>

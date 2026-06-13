@@ -80,14 +80,14 @@ export function buildResumeDocument(
         ) : null}
         <Text style={styles.workRights}>{content.work_rights}</Text>
 
-        <Text style={styles.section}>Profile</Text>
+        <Text style={styles.section}>Professional Summary</Text>
         <Text>{content.professional_summary}</Text>
 
         {content.experience.length > 0 && (
           <>
-            <Text style={styles.section}>Experience</Text>
+            <Text style={styles.section}>Work Experience</Text>
             {content.experience.map((exp, i) => (
-              <View key={i} style={{ marginBottom: 8 }}>
+              <View key={i} style={{ marginBottom: 8 }} wrap={false}>
                 <Text style={styles.expRole}>
                   {exp.role}
                   {exp.employer ? ` — ${exp.employer}` : ""}
@@ -108,20 +108,30 @@ export function buildResumeDocument(
 
         {content.skills.length > 0 && (
           <>
-            <Text style={styles.section}>Skills</Text>
-            <View style={styles.tagRow}>
-              {content.skills.map((s, i) => (
-                <Text key={i} style={styles.tag}>
-                  {s}
+            <Text style={styles.section}>Key Skills</Text>
+            {/* Plain comma-separated text — ATS parsers read this cleanly,
+                unlike bordered "pill" graphics. */}
+            <Text>{content.skills.join(", ")}</Text>
+          </>
+        )}
+
+        {content.education.length > 0 && (
+          <>
+            <Text style={styles.section}>Education</Text>
+            {content.education.map((e, i) => (
+              <View key={i} style={{ marginBottom: 3 }}>
+                <Text style={styles.expRole}>{e.qualification}</Text>
+                <Text style={styles.expMeta}>
+                  {[e.institution, e.dates].filter(Boolean).join("  ·  ")}
                 </Text>
-              ))}
-            </View>
+              </View>
+            ))}
           </>
         )}
 
         {content.certifications.length > 0 && (
           <>
-            <Text style={styles.section}>Certifications</Text>
+            <Text style={styles.section}>Certifications &amp; Licences</Text>
             {content.certifications.map((c, i) => (
               <Text key={i}>• {c}</Text>
             ))}
@@ -131,11 +141,11 @@ export function buildResumeDocument(
         {content.languages.length > 0 && (
           <>
             <Text style={styles.section}>Languages</Text>
-            {content.languages.map((l, i) => (
-              <Text key={i}>
-                {l.language} — {l.level}
-              </Text>
-            ))}
+            <Text>
+              {content.languages
+                .map((l) => `${l.language} (${l.level})`)
+                .join(", ")}
+            </Text>
           </>
         )}
 

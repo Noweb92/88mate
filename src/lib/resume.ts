@@ -2,46 +2,47 @@
  * Australian-format CV generation via the Claude API (PRD 2.1, §8).
  * Server-side only.
  *
- * Hard rules baked into the prompt: no photo, no age, no marital
- * status; professional plain English; work rights + validity date;
- * references "available upon request"; Australian certs highlighted;
- * vocabulary adapted to the target sector.
+ * Three goals baked into the prompt:
+ *  1. Australian conventions — no photo/age/marital status, AU spelling,
+ *     work-rights line, standard sections, "references on request".
+ *  2. ATS-readable — the content maps cleanly to standard headings; the
+ *     PDF (resume-pdf.tsx) keeps a single column of real selectable text.
+ *  3. Passes AI-content detectors — natural, specific, varied human
+ *     writing; no buzzword slop, no uniform bullet cadence.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import {
-  AUSTRALIAN_CERTS,
-  TEMPLATE_LABELS,
-  type ResumeTemplate,
-} from "./resume-constants";
+import { AUSTRALIAN_CERTS, ROLE_PRESETS } from "./resume-constants";
 
-export {
-  AUSTRALIAN_CERTS,
-  TEMPLATE_LABELS,
-  type ResumeTemplate,
-} from "./resume-constants";
+export { AUSTRALIAN_CERTS, ROLE_PRESETS } from "./resume-constants";
 
 export const resumeContentSchema = z.object({
   full_name: z.string(),
   headline: z
     .string()
-    .describe("Short professional headline, e.g. 'Reliable Farm Hand'"),
+    .describe(
+      "Short, plain job-title headline matching the target role, e.g. 'Farm Hand' or 'Barista'. No adjectives, no buzzwords."
+    ),
   location: z.string().nullable(),
   phone: z.string().nullable(),
   email: z.string().nullable(),
   work_rights: z
     .string()
     .describe(
-      "One line stating the visa and its validity, e.g. 'Valid Working Holiday visa (subclass 417), full work rights until 9 February 2027'"
+      "One line stating the visa and its validity, e.g. 'Working Holiday visa (subclass 417) — full work rights until 9 February 2027'"
     ),
   professional_summary: z
     .string()
-    .describe("3-4 sentence summary tailored to the target sector"),
-  skills: z.array(z.string()).describe("6-10 concise, relevant skills"),
+    .describe(
+      "2-3 sentences, first person, written like a real person — specific, plain, no clichés"
+    ),
+  skills: z
+    .array(z.string())
+    .describe("6-9 concrete, role-relevant skills — plain nouns, no fluff"),
   certifications: z
     .array(z.string())
-    .describe("Australian certifications held, exactly as provided"),
+    .describe("Australian certifications/licences held, exactly as provided"),
   languages: z
     .array(z.object({ language: z.string(), level: z.string() }))
     .describe("Languages and proficiency"),
@@ -54,20 +55,32 @@ export const resumeContentSchema = z.object({
         dates: z.string().describe("e.g. 'Mar 2026 – Apr 2026'"),
         bullets: z
           .array(z.string())
-          .describe("2-4 achievement-oriented bullet points"),
+          .describe(
+            "2-4 plain, specific bullets describing what they actually did — vary the wording, avoid identical openings"
+          ),
       })
     )
     .describe("Work history, most recent first"),
+  education: z
+    .array(
+      z.object({
+        qualification: z.string(),
+        institution: z.string().nullable(),
+        dates: z.string().nullable(),
+      })
+    )
+    .describe("Education / training from the candidate data — empty if none"),
   availability: z.string().nullable(),
   references_note: z
     .string()
-    .describe("Always 'References available upon request' or similar"),
+    .describe("Always 'References available upon request'"),
 });
 
 export type ResumeContent = z.infer<typeof resumeContentSchema>;
 
 export interface ResumeInput {
-  template: ResumeTemplate;
+  /** Free-text target role/industry — the CV adapts to whatever this is. */
+  targetRole: string;
   profile: {
     firstName: string | null;
     lastName: string | null;
@@ -93,13 +106,15 @@ export interface ResumeInput {
   targetJobAd?: string;
 }
 
-const SECTOR_GUIDANCE: Record<ResumeTemplate, string> = {
-  farm: "Emphasise physical fitness, early starts, reliability, teamwork, ability to work outdoors in all conditions, and any machinery or harvest experience.",
-  hospitality:
-    "Emphasise customer service, RSA where held, fast-paced teamwork, cash handling, and cleanliness/food-safety awareness.",
-  construction:
-    "Emphasise White Card where held, safety awareness, manual handling, punctuality, and willingness to learn on site.",
-};
+// Shared rules for both the CV and the cover letter — the anti-AI-slop
+// guardrails are the load-bearing part here.
+const HUMAN_WRITING_RULES = `WRITE LIKE A REAL PERSON (this is checked by AI detectors — generic, over-polished writing gets the CV rejected):
+- Plain, direct Australian English. Short sentences are fine. Vary sentence length and rhythm — do not make every line the same shape.
+- Be specific and concrete: name the crop, the tool, the shift pattern, the rough numbers. Specifics read as human; vague claims read as AI.
+- Do NOT start bullets with the same word, and do not use a uniform "Verb + object + outcome" template on every line.
+- BANNED words/phrases (never use): passionate, hard-working team player, results-driven, detail-oriented, proven track record, leverage, spearheaded, synergy, go-getter, dynamic, fast-paced environment, wide range of, thrive, dedicated professional, strong work ethic, "I am writing to".
+- No empty superlatives. Don't claim skills the data doesn't support. It's fine to be plain and modest.
+- Australian spelling (organise, labour, licence, programme).`;
 
 export function isResumeConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
@@ -134,22 +149,26 @@ export async function generateResumeContent(
 ): Promise<ResumeContent> {
   const client = new Anthropic();
 
-  const prompt = `Generate an Australian-format resume for a Working Holiday Maker, targeting ${TEMPLATE_LABELS[input.template]} jobs.
+  const prompt = `Write an Australian-style resume for a Working Holiday Maker applying for: ${input.targetRole}.
 
 CANDIDATE DATA:
 ${buildProfileBlock(input)}
 
-${input.targetJobAd ? `TARGET JOB AD (adapt wording and summary to match this):\n${input.targetJobAd}\n` : ""}
+${input.targetJobAd ? `TARGET JOB AD — reorient the headline, summary and skills to match this, using the same key words the employer uses:\n${input.targetJobAd}\n` : ""}
 
-RULES (Australian conventions — strict):
-- NO photo, NO age/date of birth, NO marital status, NO headshot reference.
-- Plain professional English. Australian spelling.
-- Include the work_rights line with the visa and its validity date exactly.
-- references_note must be "References available upon request".
-- certifications: list ONLY what the candidate actually provided.
-- ${SECTOR_GUIDANCE[input.template]}
-- Turn the Australian work history into proper experience entries with achievement bullets. If pre-Australia experience is given, add concise entries for it too.
-- If a field is genuinely unknown, use null — do not invent employers, dates, or certifications.`;
+AUSTRALIAN FORMAT (strict):
+- NO photo, NO age/date of birth, NO marital status, NO nationality on the document itself, NO headshot.
+- Standard sections only (the PDF renders: Professional Summary, Work Experience, Key Skills, Education, Certifications & Licences, Availability, References). Keep content mappable to those.
+- work_rights line states the visa and validity date exactly as given.
+- references_note is exactly "References available upon request".
+- certifications: list ONLY what the candidate actually provided — do not invent any.
+- Adapt all wording to "${input.targetRole}". Pull out the parts of their history most relevant to that role; for hands-on roles emphasise reliability, punctuality, physical work and any tickets/licences; for customer or office roles emphasise communication, accuracy and relevant tools.
+
+CONTENT FROM DATA ONLY:
+- Turn the Australian work history into experience entries with plain, specific bullets. Add concise entries from pre-Australia experience if given. Fill education ONLY from the data — empty array if none.
+- If a field is genuinely unknown, use null/empty — never invent employers, dates, numbers or certifications.
+
+${HUMAN_WRITING_RULES}`;
 
   const response = await client.messages.parse({
     model: process.env.ANTHROPIC_RESUME_MODEL ?? "claude-opus-4-8",
@@ -167,19 +186,21 @@ RULES (Australian conventions — strict):
 
 export async function generateCoverLetter(
   content: ResumeContent,
-  template: ResumeTemplate,
+  targetRole: string,
   targetJobAd?: string
 ): Promise<string> {
   const client = new Anthropic();
 
-  const prompt = `Write a short cover letter (max 150 words) for this candidate applying for ${TEMPLATE_LABELS[template]} work in Australia.
+  const prompt = `Write a short cover letter (110-150 words) for this candidate applying for ${targetRole} work in Australia.
 
 CANDIDATE: ${content.full_name} — ${content.headline}
 SUMMARY: ${content.professional_summary}
 WORK RIGHTS: ${content.work_rights}
 ${targetJobAd ? `JOB AD:\n${targetJobAd}` : ""}
 
-Tone: direct, genuine, Australian — no hollow flattery, no "I am writing to express my interest". Open with what they offer, mention availability and work rights, close with a clear call to action. Return only the letter body (no address block, no "Dear Sir/Madam" if no name is known — use "Hi," or "Hello,").`;
+Open with what they offer, mention availability and work rights, close with a clear ask for a chat or trial shift. Use "Hi," or "Hello," (no name known). Return only the letter body — no address block, no signature beyond the first name.
+
+${HUMAN_WRITING_RULES}`;
 
   const response = await client.messages.create({
     model: process.env.ANTHROPIC_RESUME_MODEL ?? "claude-opus-4-8",

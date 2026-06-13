@@ -1,15 +1,22 @@
 /**
- * Client-safe resume constants and types. Kept separate from resume.ts
- * (which imports the Anthropic SDK) so client components can use these
- * without dragging server-only deps into the browser bundle.
+ * Client-safe resume constants. Kept separate from resume.ts (which
+ * imports the Anthropic SDK) so client components don't drag server-only
+ * deps into the browser bundle.
  */
-export type ResumeTemplate = "farm" | "hospitality" | "construction";
 
-export const TEMPLATE_LABELS: Record<ResumeTemplate, string> = {
-  farm: "Farm / Regional work",
-  hospitality: "Hospitality",
-  construction: "Construction / Labour",
-};
+// Quick-pick chips. The CV adapts to ANY role the user types — these are
+// just shortcuts for the most common backpacker jobs.
+export const ROLE_PRESETS = [
+  "Farm / Regional work",
+  "Hospitality",
+  "Construction / Labour",
+  "Retail",
+  "Warehouse",
+  "Cleaning / Housekeeping",
+  "Office / Admin",
+  "Aged care & disability",
+  "Driver / Delivery",
+] as const;
 
 export const AUSTRALIAN_CERTS = [
   "White Card",
@@ -18,4 +25,5 @@ export const AUSTRALIAN_CERTS = [
   "Forklift Licence",
   "First Aid / CPR",
   "Working with Children Check",
+  "Australian Driver's Licence",
 ] as const;

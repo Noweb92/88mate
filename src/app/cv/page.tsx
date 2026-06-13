@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FileText, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { TEMPLATE_LABELS, isResumeConfigured, type ResumeTemplate } from "@/lib/resume";
+import { isResumeConfigured } from "@/lib/resume";
 import { formatDate } from "@/lib/visa";
 import { AppHeader } from "@/components/app-header";
 import { Disclaimer } from "@/components/disclaimer";
@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "CV builder — 88Mate" };
 
 type ResumeRow = {
   id: string;
-  template: ResumeTemplate;
+  template: string;
   content: { headline?: string; cover_letter?: string | null } | null;
   created_at: string;
 };
@@ -92,10 +92,10 @@ export default async function CvPage() {
                   <FileText className="h-5 w-5 shrink-0 text-primary" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
-                      {r.content?.headline ?? TEMPLATE_LABELS[r.template]}
+                      {r.content?.headline ?? r.template}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {TEMPLATE_LABELS[r.template]} · {formatDate(r.created_at.slice(0, 10))}
+                      {r.template} · {formatDate(r.created_at.slice(0, 10))}
                       {r.content?.cover_letter ? " · + cover letter" : ""}
                     </p>
                   </div>

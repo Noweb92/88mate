@@ -2,11 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Loader2, Lock } from "lucide-react";
-import {
-  AUSTRALIAN_CERTS,
-  TEMPLATE_LABELS,
-  type ResumeTemplate,
-} from "@/lib/resume-constants";
+import { AUSTRALIAN_CERTS, ROLE_PRESETS } from "@/lib/resume-constants";
 import { createResume, type CreateResumeInput } from "@/app/cv/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export function CvForm({ isPro }: { isPro: boolean }) {
-  const [template, setTemplate] = useState<ResumeTemplate>("farm");
+  const [targetRole, setTargetRole] = useState("");
   const [certs, setCerts] = useState<string[]>([]);
   const [languages, setLanguages] = useState("");
   const [preExp, setPreExp] = useState("");
@@ -30,10 +26,16 @@ export function CvForm({ isPro }: { isPro: boolean }) {
     );
   }
 
+  const canSubmit = targetRole.trim().length >= 2;
+
   function submit() {
+    if (!canSubmit) {
+      setError("Tell us what kind of work you're applying for.");
+      return;
+    }
     setError(null);
     const input: CreateResumeInput = {
-      template,
+      targetRole: targetRole.trim(),
       preAustraliaExperience: preExp,
       languages,
       certifications: certs as never,
@@ -50,28 +52,37 @@ export function CvForm({ isPro }: { isPro: boolean }) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label>Template</Label>
-        <div className="grid gap-2">
-          {(Object.keys(TEMPLATE_LABELS) as ResumeTemplate[]).map((t) => (
+        <Label htmlFor="role">What job are you applying for?</Label>
+        <Input
+          id="role"
+          value={targetRole}
+          onChange={(e) => setTargetRole(e.target.value)}
+          placeholder="e.g. Fruit picker, Barista, Labourer, Warehouse hand…"
+        />
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {ROLE_PRESETS.map((preset) => (
             <button
-              key={t}
+              key={preset}
               type="button"
-              onClick={() => setTemplate(t)}
+              onClick={() => setTargetRole(preset)}
               className={cn(
-                "rounded-xl border-2 p-3 text-left text-sm transition-colors",
-                template === t
-                  ? "border-primary bg-accent"
-                  : "border-border hover:border-muted-foreground/40"
+                "rounded-full border px-3 py-1 text-xs transition-colors",
+                targetRole === preset
+                  ? "border-primary bg-accent text-accent-foreground"
+                  : "border-border text-muted-foreground hover:border-muted-foreground/40"
               )}
             >
-              <span className="font-medium">{TEMPLATE_LABELS[t]}</span>
+              {preset}
             </button>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground">
+          Type any role — the CV adapts to it. The presets are just shortcuts.
+        </p>
       </div>
 
       <div className="space-y-2">
-        <Label>Australian certifications you hold</Label>
+        <Label>Australian certifications &amp; licences you hold</Label>
         <div className="grid gap-1.5">
           {AUSTRALIAN_CERTS.map((cert) => (
             <label key={cert} className="flex items-center gap-2 text-sm">
@@ -98,13 +109,15 @@ export function CvForm({ isPro }: { isPro: boolean }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="preExp">Experience before Australia (optional)</Label>
+        <Label htmlFor="preExp">
+          Experience &amp; education before Australia (optional)
+        </Label>
         <textarea
           id="preExp"
           value={preExp}
           onChange={(e) => setPreExp(e.target.value)}
           rows={4}
-          placeholder="Jobs, studies or skills from back home — a few lines is enough, the AI will format it."
+          placeholder="Past jobs, studies or skills from back home — a few lines is enough, the AI will format it."
           className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
       </div>
@@ -136,7 +149,7 @@ export function CvForm({ isPro }: { isPro: boolean }) {
           disabled={!isPro}
           placeholder={
             isPro
-              ? "Paste a job ad — the CV reorients to match it."
+              ? "Paste a job ad — the CV reorients to match its wording."
               : "Upgrade to Pro to tailor your CV to a specific job ad."
           }
           className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
@@ -167,7 +180,7 @@ export function CvForm({ isPro }: { isPro: boolean }) {
       <Button
         className="h-12 w-full"
         onClick={submit}
-        disabled={pending}
+        disabled={pending || !canSubmit}
       >
         {pending ? (
           <span className="flex items-center gap-2">
@@ -179,7 +192,7 @@ export function CvForm({ isPro }: { isPro: boolean }) {
         )}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        Australian format — no photo, no age. Editable after, exportable as PDF.
+        Australian format · ATS-friendly · written to read like you wrote it.
       </p>
     </div>
   );

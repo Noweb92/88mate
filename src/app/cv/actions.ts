@@ -18,7 +18,7 @@ import { industryLabel } from "@/lib/industries";
 const FREE_RESUME_LIMIT = 1;
 
 const inputSchema = z.object({
-  template: z.enum(["farm", "hospitality", "construction"]),
+  targetRole: z.string().trim().min(2).max(80),
   preAustraliaExperience: z.string().max(3000).optional().default(""),
   languages: z.string().max(500).optional().default(""),
   certifications: z.array(z.enum(AUSTRALIAN_CERTS)).default([]),
@@ -98,7 +98,7 @@ export async function createResume(raw: CreateResumeInput) {
   }));
 
   const resumeInput: ResumeInput = {
-    template: input.template,
+    targetRole: input.targetRole,
     profile: {
       firstName: profile.first_name,
       lastName: profile.last_name,
@@ -125,7 +125,7 @@ export async function createResume(raw: CreateResumeInput) {
     if (wantsCoverLetter) {
       coverLetter = await generateCoverLetter(
         content,
-        input.template,
+        input.targetRole,
         targetJobAd || undefined
       );
     }
@@ -137,7 +137,7 @@ export async function createResume(raw: CreateResumeInput) {
     .from("resumes")
     .insert({
       user_id: user.id,
-      template: input.template,
+      template: input.targetRole,
       content: { ...content, cover_letter: coverLetter || null },
       target_job_ad: targetJobAd || null,
     })
