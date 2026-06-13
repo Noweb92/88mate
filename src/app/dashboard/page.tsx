@@ -63,6 +63,12 @@ export default async function DashboardPage() {
     .eq("user_id", user.id);
   const periods = (periodData ?? []) as PeriodRow[];
 
+  const { count: underpaidCount } = await supabase
+    .from("documents")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("underpayment_flag", true);
+
   const goal = (profile.visa_goal ?? "second_year") as VisaGoal;
   const required = REQUIRED_DAYS[goal];
 
@@ -151,6 +157,22 @@ export default async function DashboardPage() {
                 your jobs
               </Link>{" "}
               before relying on them.
+            </p>
+          </div>
+        )}
+
+        {underpaidCount !== null && underpaidCount > 0 && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+            <p className="font-semibold text-destructive">
+              ⚠️ Possible underpayment on {underpaidCount} payslip
+              {underpaidCount > 1 ? "s" : ""}
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              The hourly rate looks below the minimum award. Review it in your{" "}
+              <Link href="/vault" className="underline underline-offset-2">
+                vault
+              </Link>{" "}
+              and check fairwork.gov.au.
             </p>
           </div>
         )}

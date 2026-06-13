@@ -17,6 +17,7 @@ type DbDoc = {
   type: string;
   storage_path: string;
   ocr_data: PayslipData | null;
+  underpayment_flag: boolean;
   created_at: string;
   work_periods: {
     start_date: string;
@@ -50,7 +51,7 @@ export default async function VaultPage() {
     supabase
       .from("documents")
       .select(
-        "id, type, storage_path, ocr_data, created_at, work_periods(start_date, employers(name))"
+        "id, type, storage_path, ocr_data, underpayment_flag, created_at, work_periods(start_date, employers(name))"
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
@@ -74,6 +75,7 @@ export default async function VaultPage() {
     type: d.type,
     storage_path: d.storage_path,
     ocr_data: d.ocr_data,
+    underpayment_flag: d.underpayment_flag,
     created_at: d.created_at,
     periodLabel: d.work_periods
       ? `${d.work_periods.employers?.name ?? "Unknown"} (${formatDate(d.work_periods.start_date)})`

@@ -11,6 +11,7 @@ import {
   isOcrConfigured,
   type PayslipData,
 } from "@/lib/ocr";
+import { checkAwardRate } from "@/lib/awards";
 
 const DOC_TYPES = [
   "payslip",
@@ -79,7 +80,7 @@ export async function runOcr(documentId: string) {
 
   const { data: doc } = await supabase
     .from("documents")
-    .select("id, storage_path")
+    .select("id, storage_path, work_periods(industry)")
     .eq("id", documentId)
     .eq("user_id", user.id)
     .single();
@@ -106,17 +107,33 @@ export async function runOcr(documentId: string) {
     return { error: "OCR failed — try again, or fill the fields manually." };
   }
 
+  // Underpayment check (PRD 2.2) — only when the document is linked to a
+  // work period whose industry maps to a seeded award.
+  // Supabase types a to-one embed as a possibly-array shape — normalise.
+  const wp = doc.work_periods as
+    | { industry: string | null }
+    | { industry: string | null }[]
+    | null;
+  const industry =
+    (Array.isArray(wp) ? wp[0]?.industry : wp?.industry) ?? null;
+  const award = await checkAwardRate(supabase, {
+    industry,
+    hourlyRate: extracted.hourly_rate,
+  });
+
   const { error: updateError } = await supabase
     .from("documents")
-    .update({ ocr_data: extracted })
+    .update({ ocr_data: extracted, underpayment_flag: award?.underpaid ?? false })
     .eq("id", documentId)
     .eq("user_id", user.id);
   if (updateError) return { error: "Could not save the extracted data." };
 
   revalidatePath("/vault");
+  revalidatePath("/dashboard");
   return {
     data: extracted,
     needsReview: extracted.confidence < OCR_CONFIDENCE_THRESHOLD,
+    award,
   };
 }
 

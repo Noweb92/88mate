@@ -22,6 +22,7 @@ export type DocumentRow = {
   type: string;
   storage_path: string;
   ocr_data: PayslipData | null;
+  underpayment_flag: boolean;
   created_at: string;
   periodLabel: string | null;
 };
@@ -112,6 +113,27 @@ export function DocumentCard({ doc }: { doc: DocumentRow }) {
               Not scanned yet.
             </p>
           ) : null}
+
+          {doc.underpayment_flag && (
+            <div className="mt-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2.5 text-xs">
+              <p className="font-semibold text-destructive">
+                ⚠️ This rate looks below the minimum award
+              </p>
+              <p className="mt-0.5 text-muted-foreground">
+                The hourly rate on this payslip is under the casual minimum for
+                this kind of work. Check your entitlements on{" "}
+                <a
+                  href="https://www.fairwork.gov.au/pay-and-wages"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  fairwork.gov.au
+                </a>
+                . Award figures are indicative.
+              </p>
+            </div>
+          )}
 
           {error && (
             <p className="mt-2 text-xs font-medium text-destructive">{error}</p>
